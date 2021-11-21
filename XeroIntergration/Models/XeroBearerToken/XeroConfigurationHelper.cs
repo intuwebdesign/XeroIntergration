@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Web;
 using Newtonsoft.Json;
 using Xero.NetStandard.OAuth2.Config;
-using Xero.NetStandard.OAuth2.Models;
+using Xero.NetStandard.OAuth2.Token;
 
 namespace XeroIntergration.Models.XeroBearerToken
 {
@@ -22,13 +21,13 @@ namespace XeroIntergration.Models.XeroBearerToken
                 ClientId        = clientId,
                 ClientSecret    = clientSecret,
                 CallbackUri     = new Uri($"{baseUrl}/home/authorize"),
-                Scope           = "openid"
+                Scope           = "openid offline_access"
             };
 
             return xconfig;
         }
 
-        public static void StoreToken(XeroToken xeroToken)
+        public static void StoreToken(XeroOAuth2Token xeroToken)
         {
             var dir         = HttpContext.Current.Server.MapPath("~/XeroToken");
             var file        = Path.Combine(dir, "xeroToken.json");
@@ -36,7 +35,7 @@ namespace XeroIntergration.Models.XeroBearerToken
             File.WriteAllText(file,serilizeToken);
         }
 
-        public static XeroToken RetrieveToken()
+        public static XeroOAuth2Token RetrieveToken()
         {
             var dir = HttpContext.Current.Server.MapPath("~/XeroToken");
             var file = Path.Combine(dir, "xeroToken.json");
@@ -44,18 +43,9 @@ namespace XeroIntergration.Models.XeroBearerToken
             using (StreamReader streamReader = new StreamReader(file))
             {
                 string json = streamReader.ReadToEnd();
-                XeroToken token = JsonConvert.DeserializeObject<XeroToken>(json);
+                var token = JsonConvert.DeserializeObject<XeroOAuth2Token>(json);
                 return token;
             }
-        }
-
-        public class XeroToken
-        {
-            public string AccessToken    { get; set; }
-            public DateTime ExpiresAtUtc { get; set; }
-            public string IdToken        { get; set; }
-            public string RefreshToken   { get; set; }
-            public List<Tenant> Tenant   { get; set; }
         }
 
         public static bool DoesXeroTokenFileExist()

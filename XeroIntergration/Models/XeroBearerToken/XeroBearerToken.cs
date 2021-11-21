@@ -20,11 +20,11 @@ namespace XeroIntergration.Models.XeroBearerToken
 
                 if (token != null )
                 {
-                    //var xeroToken = token.Token;
                     var xeroTokenExpires = token.ExpiresAtUtc;
 
                     if (DateTime.Now.ToUniversalTime() > xeroTokenExpires)
                     {
+
                         client          = new XeroClient(XeroConfigurationHelper.XeroConfiguration());
                         authorizeUrl    = client.BuildLoginUri();
 
@@ -34,6 +34,7 @@ namespace XeroIntergration.Models.XeroBearerToken
             }
 
             client = new XeroClient(XeroConfigurationHelper.XeroConfiguration());
+
             authorizeUrl = client.BuildLoginUri();
             return authorizeUrl;
 
@@ -44,21 +45,68 @@ namespace XeroIntergration.Models.XeroBearerToken
             var client          = new XeroClient(XeroConfigurationHelper.XeroConfiguration());
             var bearerToken     = Task.Run(()=>client.RequestAccessTokenAsync(code));
             
-            IXeroToken token            = bearerToken.Result;
+            XeroOAuth2Token token     = (XeroOAuth2Token)bearerToken.Result;
             DateTime expiryDateTime   = bearerToken.Result.ExpiresAtUtc;
 
-            XeroConfigurationHelper.XeroToken xeroToken = new XeroConfigurationHelper.XeroToken
-            {
-                AccessToken     = token.AccessToken,
-                ExpiresAtUtc    = expiryDateTime,
-                IdToken         = token.IdToken,
-                RefreshToken    = token.RefreshToken,
-                Tenant          = token.Tenants
-            };
-
-            XeroConfigurationHelper.StoreToken(xeroToken);
+            XeroConfigurationHelper.StoreToken(token);
            
             return token.AccessToken;
+        }
+
+        public bool CreateNewCustomer()
+        {
+            //TODO for later blog
+            bool doesXeroTokenFileExist = XeroConfigurationHelper.DoesXeroTokenFileExist();
+            XeroClient client;
+
+            if (doesXeroTokenFileExist)
+            {
+                var token = XeroConfigurationHelper.RetrieveToken();
+
+                if (token == null) return false;
+
+                var xeroTokenExpires = token.ExpiresAtUtc;
+
+                if (DateTime.Now.ToUniversalTime() > xeroTokenExpires)
+                {
+                    client            = new XeroClient(XeroConfigurationHelper.XeroConfiguration());
+                    var refreshToken  = token;
+                    token             = (XeroOAuth2Token)Task.Run(() => client.RefreshAccessTokenAsync(refreshToken)).Result;
+                    XeroConfigurationHelper.StoreToken(token);
+
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        public bool CreateNewCustomerInvoice()
+        {
+            //TODO for later blog
+            bool doesXeroTokenFileExist = XeroConfigurationHelper.DoesXeroTokenFileExist();
+            XeroClient client;
+
+            if (!doesXeroTokenFileExist) return false;
+
+            var token = XeroConfigurationHelper.RetrieveToken();
+
+            if (token != null)
+            {
+                var xeroTokenExpires = token.ExpiresAtUtc;
+
+                if (DateTime.Now.ToUniversalTime() > xeroTokenExpires)
+                {
+                    client           = new XeroClient(XeroConfigurationHelper.XeroConfiguration());
+                    var refreshToken = token;
+                    token            = (XeroOAuth2Token)Task.Run(() => client.RefreshAccessTokenAsync(refreshToken)).Result;
+
+                    XeroConfigurationHelper.StoreToken(token);
+
+                    return false;
+                }
+            }
+
+            return false;
         }
     }
 }
