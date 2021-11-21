@@ -1,0 +1,9 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+@if (ViewBag.AuthUrl != null)
+{
+    <br/>
+    <a class="btn btn-success" href="@ViewBag.AuthUrl.ToString()">Login To Xero</a>
+}
