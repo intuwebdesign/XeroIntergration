@@ -1,0 +1,15 @@
+﻿@model XeroIntergration.Models.Customer.CustomerViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            @if(ViewBag.Status.ToString() != null)
+            {
+            <p class="text-info">@ViewBag.Status</p>
+            }
+        </div>
+    </div>
+</div>

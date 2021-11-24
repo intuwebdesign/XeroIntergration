@@ -1,0 +1,21 @@
+﻿@model List<XeroIntergration.Models.Customer.ListOfCustomers>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 mt-5">
+            <h4>List Of Customers</h4>
+            <p class="small">You would not really populate the list this way but its quick and easy</p>
+            <select name="customers" id="customer" class="form-control">
+                @foreach (var customer in Model)
+                {
+                    <option value="@customer.CustomerId">@customer.CustomerName</option>
+                }
+            </select>
+        </div>
+    </div>
+</div>
+

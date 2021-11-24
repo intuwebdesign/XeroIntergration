@@ -21,7 +21,7 @@ namespace XeroIntergration.Models.XeroBearerToken
                 ClientId        = clientId,
                 ClientSecret    = clientSecret,
                 CallbackUri     = new Uri($"{baseUrl}/home/authorize"),
-                Scope           = "openid offline_access"
+                Scope           = "openid offline_access accounting.transactions accounting.transactions.read accounting.reports.read accounting.journals.read accounting.settings accounting.settings.read accounting.contacts accounting.contacts.read accounting.attachments accounting.attachments.read"
             };
 
             return xconfig;

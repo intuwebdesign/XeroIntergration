@@ -6,22 +6,20 @@
     <title>@ViewBag.Title - My ASP.NET Application</title>
 
     <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
-    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Content/Site.css?v=1" rel="stylesheet" />
 </head>
 <body>
-    <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar navColour">
         <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                @Html.ActionLink("Xero Demo", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
-            </div>
+            <ul class="list-inline">
+                <li class="list-inline-item">@Html.ActionLink("Xero Demo", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })</li>
+                <li class="list-inline-item">@Html.ActionLink("Create Contact", "Index", "Contacts", new { area = "" }, new { @class = "navbar-brand" })</li>
+                <li class="list-inline-item">@Html.ActionLink("List Of Customers", "ListOfCustomers", "Contacts", new { area = "" }, new { @class = "navbar-brand" })</li>
+            </ul>
+           
         </div>
     </div>
-    <div class="container body-content">
+    <div class="container">
         @RenderBody()
         <hr />
         <footer>
