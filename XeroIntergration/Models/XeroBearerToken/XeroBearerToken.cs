@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Web.Mvc;
 using Xero.NetStandard.OAuth2.Api;
 using Xero.NetStandard.OAuth2.Client;
 using Xero.NetStandard.OAuth2.Model.Accounting;
@@ -167,10 +169,10 @@ namespace XeroIntergration.Models.XeroBearerToken
         }
 
         /// <summary>
-        /// Retuens all the customers except those archived, to do that change includeArchived to true
+        /// Retuens all the customers except those archived, to return archived change includeArchived to true
         /// </summary>
         /// <returns>ListOfCustomers</returns>
-        public List<ListOfCustomers> GetCompanyNameAndId()
+        public InvoiceCustomer GetCompanyNameAndId()
         {
             bool doesXeroTokenFileExist = XeroConfigurationHelper.DoesXeroTokenFileExist();
             XeroClient client;
@@ -195,33 +197,38 @@ namespace XeroIntergration.Models.XeroBearerToken
                 string accessToken  = token.AccessToken;
                 string tenantId     = token.Tenants[0].TenantId.ToString();
 
-                List<ListOfCustomers> customerList  = new List<ListOfCustomers>();
                 AccountingApi accountingApi         = new AccountingApi();
 
                 var xeroResponse = Task.Run(() => accountingApi.GetContactsAsync(accessToken: accessToken, xeroTenantId: tenantId, ifModifiedSince: null, where: null, order: null, iDs: null, page: 1, includeArchived: false, summaryOnly: false, searchTerm: null)).Result;
 
-                foreach (var customer in xeroResponse._Contacts)
-                {
-                    customerList.Add(new ListOfCustomers(customer.Name, customer.ContactID.ToString()));
-                }
+                var listOfCustomers = xeroResponse._Contacts.Select(r => new SelectListItem { Text = r.Name, Value = r.ContactID.ToString() }).ToList();
 
-                return customerList;
+                var model = new InvoiceCustomer
+                {
+                    ListOfCustomers = listOfCustomers
+                };
+
+                return model;
             }
             return null;
         }
 
-        public bool CreateNewCustomerInvoice()
+        /// <summary>
+        /// Create a new invoice
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns>Will return the invoice number</returns>
+        public string CreateNewCustomerInvoice(InvoiceCustomer model)
         {
-            //TODO for later blog
             bool doesXeroTokenFileExist = XeroConfigurationHelper.DoesXeroTokenFileExist();
             XeroClient client;
 
-            if (!doesXeroTokenFileExist) return false;
-
-            var token = XeroConfigurationHelper.RetrieveToken();
-
-            if (token != null)
+            if (doesXeroTokenFileExist)
             {
+                var token = XeroConfigurationHelper.RetrieveToken();
+
+                if (token == null) return "No Token";
+
                 var xeroTokenExpires = token.ExpiresAtUtc;
 
                 if (DateTime.Now.ToUniversalTime() > xeroTokenExpires)
@@ -231,12 +238,63 @@ namespace XeroIntergration.Models.XeroBearerToken
                     token = (XeroOAuth2Token)Task.Run(() => client.RefreshAccessTokenAsync(refreshToken)).Result;
 
                     XeroConfigurationHelper.StoreToken(token);
-
-                    return false;
                 }
+
+                string accessToken  = token.AccessToken;
+                string tenantId     = token.Tenants[0].TenantId.ToString();
+
+                var contact = new Contact
+                {
+                    ContactID = Guid.Parse(model.Customers)
+                };
+
+                var line = new LineItem
+                {
+                    Description     = model.Description,
+                    Quantity        = model.Quantity,
+                    UnitAmount      = model.UnitAmount,
+                    AccountCode     = model.AccountCode,
+                    TaxType         = model.TaxType
+                };
+
+                var lines = new List<LineItem>
+                {
+                    line
+                };
+
+                var invoice = new Invoice
+                {
+                    Type            = Invoice.TypeEnum.ACCREC,
+                    Contact         = contact,
+                    Date            = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-dd")),
+                    DueDate         = Convert.ToDateTime(DateTime.Now.AddDays(14).ToString("yyyy-MM-dd")),
+                    LineItems       = lines,
+                    CurrencyCode    = CurrencyCode.GBP,
+                    Status          = Invoice.StatusEnum.AUTHORISED
+                };
+
+                var invoiceList = new List<Invoice> { invoice };
+
+                var invoices = new Invoices
+                {
+                    _Invoices = invoiceList
+                };
+
+
+                AccountingApi accountingApi = new AccountingApi();
+
+                var xeroResponse = Task.Run(() => accountingApi.CreateInvoicesAsync(accessToken, tenantId, invoices)).Result;
+                
+                Guid invoiceId              = new Guid(xeroResponse._Invoices[0].InvoiceID.ToString());
+                RequestEmpty requestEmpty   = new RequestEmpty();
+
+                var sendEmailInvoice = Task.Run(() => accountingApi.EmailInvoiceAsync(accessToken, tenantId, invoiceId, requestEmpty)).Id;
+
+                var returnStatus = $"Invoice Number {xeroResponse._Invoices[0].InvoiceNumber} Email Sent ID {sendEmailInvoice}";
+                return returnStatus;
             }
 
-            return false;
+            return "No File";
         }
     }
 }

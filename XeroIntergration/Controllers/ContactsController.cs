@@ -18,6 +18,7 @@ namespace XeroIntergration.Controllers
         {
             IXeroBearerToken token = new XeroBearerToken();
             var listOfCustomer = token.GetCompanyNameAndId();
+            
             return View("~/Views/Contacts/ListOfCustomers.cshtml", listOfCustomer);
         }
 

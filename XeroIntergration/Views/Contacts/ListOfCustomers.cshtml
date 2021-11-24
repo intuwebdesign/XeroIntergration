@@ -1,4 +1,4 @@
-﻿@model List<XeroIntergration.Models.Customer.ListOfCustomers>
+﻿@model XeroIntergration.Models.Customer.InvoiceCustomer
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -8,13 +8,45 @@
     <div class="row">
         <div class="col-md-8 mt-5">
             <h4>List Of Customers</h4>
-            <p class="small">You would not really populate the list this way but its quick and easy</p>
-            <select name="customers" id="customer" class="form-control">
-                @foreach (var customer in Model)
-                {
-                    <option value="@customer.CustomerId">@customer.CustomerName</option>
-                }
-            </select>
+            @if (TempData["Status"] != null)
+            {
+                <p class="text-info p-3">@TempData["Status"]</p>
+            }
+            @using (Html.BeginForm("Invoice", "Invoice", FormMethod.Post, new { enctype = "multipart/form-data", id = "frmCustomer", name = "frmCustomer" }))
+            {
+                @Html.LabelFor(x => x.Customers)<br />
+                @Html.DropDownListFor(x => x.Customers, new SelectList(Model.ListOfCustomers, "Value", "Text"), new { @class = "form-control" })
+
+
+                @Html.LabelFor(x => x.Description)
+                <div class="input-group p-2">
+                    @Html.TextBoxFor(x => x.Description, new { Class = "form-control", Placeholder = "Description" })
+                </div>
+
+                @Html.LabelFor(x => x.AccountCode)
+                <div class="input-group p-2">
+                    @Html.TextBoxFor(x => x.AccountCode, new { Class = "form-control", Value = "200" })
+                </div>
+
+                @Html.LabelFor(x => x.TaxType)
+                <div class="input-group p-2">
+                    @Html.TextBoxFor(x => x.TaxType, new { Class = "form-control", Value = "ZERORATEDOUTPUT" })
+                </div>
+
+                @Html.LabelFor(x => x.Quantity)
+                <div class="input-group p-2">
+                    @Html.TextBoxFor(x => x.Quantity, new { Class = "form-control", Placeholder = "Quantity" })
+                </div>
+
+                @Html.LabelFor(x => x.UnitAmount)
+                <div class="input-group p-2">
+                    @Html.TextBoxFor(x => x.UnitAmount, new { Class = "form-control", Placeholder = "Price per unit" })
+                </div>
+                <div class="input-group p-2">
+                    <button type="submit" class="btn btn-success">Create Invoice</button>
+                </div>
+            }
+
         </div>
     </div>
 </div>

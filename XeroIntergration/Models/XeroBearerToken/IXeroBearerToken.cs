@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using XeroIntergration.Models.Customer;
+﻿using XeroIntergration.Models.Customer;
 
 namespace XeroIntergration.Models.XeroBearerToken
 {
@@ -7,8 +6,8 @@ namespace XeroIntergration.Models.XeroBearerToken
     {
         string LoginUrl();
         string BearerToken(string code);
-        bool CreateNewCustomerInvoice();
+        string CreateNewCustomerInvoice(InvoiceCustomer model);
         bool CreateNewCustomer(CustomerViewModel model);
-        List<ListOfCustomers> GetCompanyNameAndId();
+        InvoiceCustomer GetCompanyNameAndId();
     }
 }
